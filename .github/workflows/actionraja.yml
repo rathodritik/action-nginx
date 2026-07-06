@@ -1,0 +1,49 @@
+name: Deploy Website to EC2 (Nginx) 
+ 
+on: 
+  push: 
+    branches: 
+      - main 
+ 
+jobs: 
+  deploy: 
+    runs-on: ubuntu-latest 
+ 
+    steps: 
+      - name: Checkout Repository 
+        uses: actions/checkout@v4 
+
+      # આ નવું સ્ટેપ એડ કર્યું છે જેથી અપલોડ કરતા પહેલા ફોલ્ડર બની જાય
+      - name: Create target directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: mkdir -p ${{ secrets.TARGET_DIR }}
+ 
+      - name: Upload Files to EC2 
+        uses: easingthemes/ssh-deploy@main 
+        env: 
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }} 
+          REMOTE_HOST: ${{ secrets.HOST_DNS }} 
+          REMOTE_USER: ${{ secrets.USERNAME }} 
+          SOURCE: "./"  # આ લાઈન નવી એડ કરી છે
+          TARGET: ${{ secrets.TARGET_DIR }} 
+ 
+      - name: Execute Commands on EC2 
+        uses: appleboy/ssh-action@v1.0.3 
+        with: 
+          host: ${{ secrets.HOST_DNS }} 
+          username: ${{ secrets.USERNAME }} 
+          key: ${{ secrets.EC2_SSH_KEY }} 
+          script: | 
+            sudo apt update 
+            sudo apt install nginx -y 
+            sudo systemctl enable nginx 
+            sudo systemctl start nginx 
+ 
+            sudo rm -rf /var/www/html/* # અહીં ચેક કરો કે ફોલ્ડરનું નામ સાચું હોય 
+            sudo cp -r /home/ubuntu/website/* /var/www/html/ 
+ 
+            sudo systemctl restart nginx
