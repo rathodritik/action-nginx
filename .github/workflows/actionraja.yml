@@ -43,6 +43,5 @@ jobs:
             sudo systemctl start nginx 
  
             sudo rm -rf /var/www/html/* # Ahiya niche ni line ma aakho path badli didho che:
-            sudo cp -r /home/ubuntu/website/devops/code/action-nginx/* /var/www/html/ 
- 
+             sudo cp -r /home/ubuntu/website/* /var/www/html/ 
             sudo systemctl restart nginx
